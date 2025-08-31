@@ -15,7 +15,7 @@ from speech_recognition_module import SpeechToText
 from ui import ChatUI
 
 # .envファイルから環境変数を読み込む（ファイルが存在する場合）
-# 既存の環境変数は上書きしない
+# .exe化した場合、.exeと同じ階層の.envを読み込む
 load_dotenv(override=False)
 
 
@@ -29,6 +29,16 @@ def log(message: str) -> None:
 		sys.stdout.flush()
 
 
+def _get_base_dir() -> str:
+	"""実行環境（スクリプト or .exe）に応じてリソースファイルの基準パスを返す。"""
+	if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+		# PyInstallerにバンドルされた.exeとして実行中
+		return os.path.dirname(sys.executable)
+	else:
+		# 通常の.pyスクリプトとして実行中
+		return os.path.dirname(os.path.abspath(__file__))
+
+
 def _choose_should_respond(probability: float) -> bool:
 	"""確率に基づき応答するか決定する。"""
 	return random.random() < max(0.0, min(1.0, probability))
@@ -39,7 +49,7 @@ class AppController:
 
 	def __init__(self) -> None:
 		log("=== AI音声チャットアプリ起動 ===")
-		base_dir = os.path.dirname(os.path.abspath(__file__))
+		base_dir = _get_base_dir()
 		self._characters_path = os.path.join(base_dir, "characters.json")
 		log(f"キャラクターファイルパス: {self._characters_path}")
 

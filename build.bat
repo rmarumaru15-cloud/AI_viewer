@@ -7,6 +7,7 @@ echo [INFO] AI Voice Chat - Executable Builder
 echo.
 echo [INFO] This script will bundle the Python application into a single .exe file.
 echo [INFO] The final executable will be located in the 'dist' directory.
+echo [INFO] IMPORTANT: 'characters.json' and '.env' must be in the same directory as the final .exe
 echo.
 
 rem Check if pyinstaller is installed
@@ -18,7 +19,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [INFO] Starting build process...
-pyinstaller --noconfirm --onefile --windowed --add-data "characters.json;." --icon="NONE" main.py
+pyinstaller --noconfirm --onefile --windowed --icon="NONE" main.py
 
 if %errorlevel% equ 0 (
     echo.
