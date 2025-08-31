@@ -15,16 +15,6 @@ from speech_recognition_module import SpeechToText
 from ui import ChatUI
 
 
-def log(message: str) -> None:
-	"""コンソールにログを出力する（コンソールがない場合は何もしない）。"""
-	# pyinstallerの--windowedモードではsys.stdoutがNoneになるため、存在チェックを行う
-	if sys.stdout:
-		timestamp = time.strftime("%H:%M:%S")
-		log_message = f"[{timestamp}] {message}"
-		print(log_message)
-		sys.stdout.flush()
-
-
 def _get_base_dir() -> str:
 	"""実行環境（スクリプト or .exe）に応じてリソースファイルの基準パスを返す。"""
 	if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -33,6 +23,33 @@ def _get_base_dir() -> str:
 	else:
 		# 通常の.pyスクリプトとして実行中
 		return os.path.dirname(os.path.abspath(__file__))
+
+
+# --- .envファイルの読み込み処理 ---
+# アプリケーションの早期に.envファイルを読み込むことで、設定関連の問題を特定しやすくする。
+# exe化した場合でも、実行ファイルの場所に.envがあれば読み込まれる。
+BASE_DIR = _get_base_dir()
+DOTENV_PATH = os.path.join(BASE_DIR, '.env')
+
+# ログ関数が初期化される前なので、printで標準出力に直接書き出す
+print(f"INFO: Searching for .env file at: {DOTENV_PATH}")
+if os.path.exists(DOTENV_PATH):
+	# override=True を指定し、既存の環境変数を.envファイルの値で上書きする
+	load_dotenv(dotenv_path=DOTENV_PATH, override=True)
+	print("INFO: .env file found and loaded (override enabled).")
+else:
+	print("WARNING: .env file not found. GOOGLE_API_KEY must be set in the environment.")
+# --- 読み込み処理ここまで ---
+
+
+def log(message: str) -> None:
+	"""コンソールにログを出力する（コンソールがない場合は何もしない）。"""
+	# pyinstallerの--windowedモードではsys.stdoutがNoneになるため、存在チェックを行う
+	if sys.stdout:
+		timestamp = time.strftime("%H:%M:%S")
+		log_message = f"[{timestamp}] {message}"
+		print(log_message)
+		sys.stdout.flush()
 
 
 def _choose_should_respond(probability: float) -> bool:
@@ -198,15 +215,6 @@ class AppController:
 
 def main() -> None:
 	"""エントリーポイント。"""
-	# .envファイルを明示的なパスで読み込む
-	base_dir = _get_base_dir()
-	dotenv_path = os.path.join(base_dir, '.env')
-	if os.path.exists(dotenv_path):
-		load_dotenv(dotenv_path=dotenv_path, override=False)
-		log(f"Loaded .env file from: {dotenv_path}")
-	else:
-		log(f".env file not found at: {dotenv_path}")
-
 	controller = AppController()
 	try:
 		controller.ui.mainloop()
