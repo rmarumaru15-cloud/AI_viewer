@@ -7,6 +7,8 @@ import sys
 from typing import List, Dict, Any, Deque, Tuple
 from collections import deque
 
+from dotenv import load_dotenv
+
 from character_manager import load_characters
 from gemini_client import GeminiClient
 from speech_recognition_module import SpeechToText
@@ -14,11 +16,23 @@ from ui import ChatUI
 
 
 def log(message: str) -> None:
-	"""コンソールとUIの両方にログを出力する。"""
-	timestamp = time.strftime("%H:%M:%S")
-	log_message = f"[{timestamp}] {message}"
-	print(log_message)  # コンソール出力
-	sys.stdout.flush()  # 即座にフラッシュ
+	"""コンソールにログを出力する（コンソールがない場合は何もしない）。"""
+	# pyinstallerの--windowedモードではsys.stdoutがNoneになるため、存在チェックを行う
+	if sys.stdout:
+		timestamp = time.strftime("%H:%M:%S")
+		log_message = f"[{timestamp}] {message}"
+		print(log_message)
+		sys.stdout.flush()
+
+
+def _get_base_dir() -> str:
+	"""実行環境（スクリプト or .exe）に応じてリソースファイルの基準パスを返す。"""
+	if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+		# PyInstallerにバンドルされた.exeとして実行中
+		return os.path.dirname(sys.executable)
+	else:
+		# 通常の.pyスクリプトとして実行中
+		return os.path.dirname(os.path.abspath(__file__))
 
 
 def _choose_should_respond(probability: float) -> bool:
@@ -31,29 +45,29 @@ class AppController:
 
 	def __init__(self) -> None:
 		log("=== AI音声チャットアプリ起動 ===")
-		base_dir = os.path.dirname(os.path.abspath(__file__))
+		base_dir = _get_base_dir()
 		self._characters_path = os.path.join(base_dir, "characters.json")
 		log(f"キャラクターファイルパス: {self._characters_path}")
-		
+
 		self.characters: List[Dict[str, Any]] = load_characters(self._characters_path)
 		log(f"キャラクターデータ読み込み完了: {len(self.characters)}件")
-		
+
 		log("音声認識モジュール初期化中...")
 		self.s2t = SpeechToText()
 		log("音声認識モジュール初期化完了")
-		
+
 		self.gemini = None
 		self.ui = ChatUI()
 		log("UI初期化完了")
-		
+
 		self._init_gemini_safe()
 		self._report_characters_status()
-		
+
 		# 直近2ターン分の履歴: (role, text) role ∈ {"user","ai:name"}
 		self.history: Deque[Tuple[str, str]] = deque(maxlen=6)  # 複数AIなので最大6件程度
 		# Gemini の同時実行数を制限してレート超過を避ける
 		self._gen_sema = threading.Semaphore(3)
-		
+
 		log("音声認識ループ開始...")
 		# 自動連続リッスン開始
 		threading.Thread(target=self._listen_loop, daemon=True).start()
@@ -99,13 +113,13 @@ class AppController:
 	def _run_once(self) -> None:
 		self.ui.set_status("聞き取り中…")
 		log("🎤 音声聞き取り開始...")
-		
+
 		text = self.s2t.listen_once(timeout=5, phrase_time_limit=10)
 		if not text:
 			self.ui.set_status("聞き取り失敗または無音")
 			log("❌ 音声聞き取り失敗または無音")
 			return
-		
+
 		log(f"✅ 音声認識成功: 「{text}」")
 		# 履歴にユーザー発話を追加
 		self.history.append(("user", text))
@@ -155,16 +169,16 @@ class AppController:
 		time.sleep(max(0.0, delay))
 		if not self.gemini:
 			return
-		
+
 		name = character.get("name", "AI")
 		log(f"🎭 キャラクター「{name}」応答生成開始")
-		
+
 		# レート超過を避けるため同時実行を制限
 		acquired = self._gen_sema.acquire(timeout=30)
 		if not acquired:
 			log(f"❌ キャラクター「{name}」: セマフォ取得タイムアウト")
 			return
-		
+
 		try:
 			reply = self.gemini.generate_reply_with_history(user_text, history_snapshot, character)
 		except Exception as e:
@@ -172,18 +186,27 @@ class AppController:
 			return
 		finally:
 			self._gen_sema.release()
-		
+
 		# エラー文字列は表示しない
 		if not reply or reply.startswith("(エラー"):
 			log(f"⚠️ キャラクター「{name}」: 無効な応答内容")
 			return
-		
+
 		log(f"✅ キャラクター「{name}」応答完了: {reply}")
 		self.ui.append_message(f"{name}: {reply}")
 
 
 def main() -> None:
 	"""エントリーポイント。"""
+	# .envファイルを明示的なパスで読み込む
+	base_dir = _get_base_dir()
+	dotenv_path = os.path.join(base_dir, '.env')
+	if os.path.exists(dotenv_path):
+		load_dotenv(dotenv_path=dotenv_path, override=False)
+		log(f"Loaded .env file from: {dotenv_path}")
+	else:
+		log(f".env file not found at: {dotenv_path}")
+
 	controller = AppController()
 	try:
 		controller.ui.mainloop()
@@ -194,5 +217,3 @@ def main() -> None:
 
 if __name__ == "__main__":
 	main()
-
-

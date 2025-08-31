@@ -1,4 +1,7 @@
 @echo off
+rem Change current directory to the script's directory to ensure paths are correct
+cd /d %~dp0
+
 chcp 65001 >nul
 title AI音声チャット - ログ表示
 

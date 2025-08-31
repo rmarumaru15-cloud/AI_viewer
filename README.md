@@ -16,15 +16,27 @@
 - Google API キー（Gemini 用）
 
 ## セットアップ
-1. 依存関係のインストール
+
+### 1. 依存関係のインストール
 ```bash
 pip install -r requirements.txt
 ```
 
-2. 環境変数に API キーを設定（PowerShell）
-```bash
-$Env:GOOGLE_API_KEY="YOUR_API_KEY"
+### 2. APIキーの設定（推奨）
+本アプリケーションの使用には、Google の API キー（Gemini用）が必要です。
+
+1. `.env.example` ファイルをコピーして、同じ階層に `.env` という名前のファイルを作成します。
+2. 作成した `.env` ファイルを開き、`YOUR_API_KEY_HERE` の部分を自分のAPIキーに書き換えます。
+
+```ini
+# .env ファイルの例
+GOOGLE_API_KEY="ここにあなたのAPIキーを貼り付け"
 ```
+
+APIキーは [Google AI Studio](https://aistudio.google.com/app/apikey) から取得できます。
+
+### (代替) 環境変数による設定
+`.env` ファイルを使用しない場合、従来通り環境変数に `GOOGLE_API_KEY` を設定することでも動作します。
 
 ## 実行方法
 
@@ -39,12 +51,31 @@ start_app.bat
 python main.py
 ```
 
+## 実行可能ファイル(EXE)のビルドと配布
+
+このアプリケーションは、`PyInstaller` を使って単一の実行可能ファイル（`.exe`）に変換することができます。
+
+1. **PyInstallerのインストール** (未導入の場合)
+   ```bash
+   pip install pyinstaller
+   ```
+2. **ビルドスクリプトの実行**
+   - **通常ビルド**: `build.bat` を実行します。GUIウィンドウのみが表示される実行ファイルが作成されます。
+   - **デバッグビルド**: `build-debug.bat` を実行します。GUIに加えて、ログが出力されるコンソールウィンドウも一緒に表示されるため、問題発生時の調査に役立ちます。
+
+3. **成果物の確認と配布**
+   - ビルドが成功すると、`dist` フォルダ内に `main.exe` が生成されます。
+   - **重要:** この `main.exe` を配布・実行する際には、以下のファイルを常に `main.exe` と同じフォルダに配置する必要があります。
+     - `characters.json` （キャラクター設定ファイル）
+     - `.env` （APIキー設定ファイル）
+   - つまり、`dist` フォルダに必要なファイルをコピーして、フォルダごと配布するのが簡単です。
+
 ## 使用方法
 
-1. **起動**: `start_app.bat` をダブルクリック
+1. **起動**: `start_app.bat` をダブルクリック、または `dist/main.exe` を実行
 2. **音声認識**: マイクに向かって話す
 3. **AI応答**: 複数のキャラクターが順次応答
-4. **ログ確認**: コマンドプロンプトでリアルタイムログを確認
+4. **ログ確認**: コマンドプロンプトでリアルタイムログを確認（`start_app.bat`またはデバッグビルド版.exe使用時）
 
 ## トラブルシューティング
 
@@ -55,13 +86,9 @@ python main.py
 
 ### AI応答が来ない場合
 - コマンドプロンプトのログを確認
-- `GOOGLE_API_KEY` が正しく設定されているか確認
+- `.env` ファイルまたは環境変数で `GOOGLE_API_KEY` が正しく設定されているか確認
+- `characters.json` が `.exe` と同じ場所にあるか確認
 - インターネット接続を確認
-
-### エラーログの確認方法
-- コマンドプロンプトに表示されるログを確認
-- エラーメッセージの内容を確認
-- ステータスバーの表示を確認
 
 ## ファイル構成
 - main.py: メイン制御（音声→テキスト→AI応答→UI表示）
@@ -69,10 +96,12 @@ python main.py
 - gemini_client.py: Gemini API クライアント
 - character_manager.py: キャラクター管理（JSON 読み込み）
 - ui.py: tkinter ベースのチャット UI
-- characters.json: キャラクターデータ
+- characters.json: **編集可能**なキャラクターデータ
 - start_app.bat: ログ表示付き起動用バッチファイル
+- build.bat: EXEビルド用バッチファイル
+- build-debug.bat: EXEデバッグビルド用バッチファイル
+- .env.example: APIキー設定用のテンプレートファイル
 
 ## 注意事項
-- `characters.json` は別途提供ファイルを `python-app/` 直下に配置してください。
 - マイクドライバや PyAudio のインストールが必要です（エラー時は `pip install pipwin && pipwin install pyaudio` を検討）。
 - ログを確認するには `start_app.bat` を使用してください。
