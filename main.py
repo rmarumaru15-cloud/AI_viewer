@@ -20,11 +20,13 @@ load_dotenv(override=False)
 
 
 def log(message: str) -> None:
-	"""コンソールとUIの両方にログを出力する。"""
-	timestamp = time.strftime("%H:%M:%S")
-	log_message = f"[{timestamp}] {message}"
-	print(log_message)  # コンソール出力
-	sys.stdout.flush()  # 即座にフラッシュ
+	"""コンソールにログを出力する（コンソールがない場合は何もしない）。"""
+	# pyinstallerの--windowedモードではsys.stdoutがNoneになるため、存在チェックを行う
+	if sys.stdout:
+		timestamp = time.strftime("%H:%M:%S")
+		log_message = f"[{timestamp}] {message}"
+		print(log_message)
+		sys.stdout.flush()
 
 
 def _choose_should_respond(probability: float) -> bool:
