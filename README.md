@@ -16,27 +16,15 @@
 - Google API キー（Gemini 用）
 
 ## セットアップ
-
-### 1. 依存関係のインストール
+1. 依存関係のインストール
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. APIキーの設定（推奨）
-本アプリケーションの使用には、Google の API キー（Gemini用）が必要です。
-
-1. `.env.example` ファイルをコピーして、同じ階層に `.env` という名前のファイルを作成します。
-2. 作成した `.env` ファイルを開き、`YOUR_API_KEY_HERE` の部分を自分のAPIキーに書き換えます。
-
-```ini
-# .env ファイルの例
-GOOGLE_API_KEY="ここにあなたのAPIキーを貼り付け"
+2. 環境変数に API キーを設定（PowerShell）
+```bash
+$Env:GOOGLE_API_KEY="YOUR_API_KEY"
 ```
-
-APIキーは [Google AI Studio](https://aistudio.google.com/app/apikey) から取得できます。
-
-### (代替) 環境変数による設定
-`.env` ファイルを使用しない場合、従来通り環境変数に `GOOGLE_API_KEY` を設定することでも動作します。
 
 ## 実行方法
 
@@ -51,24 +39,9 @@ start_app.bat
 python main.py
 ```
 
-## 実行可能ファイル(EXE)のビルド
-このアプリケーションは、`PyInstaller` を使って単一の実行可能ファイル（`.exe`）に変換することができます。
-
-1. **PyInstallerのインストール** (未導入の場合)
-   ```bash
-   pip install pyinstaller
-   ```
-2. **ビルドスクリプトの実行**
-   プロジェクトのルートにある `build.bat` を実行します。
-   ```bash
-   build.bat
-   ```
-3. **成果物の確認**
-   ビルドが成功すると、`dist` フォルダ内に `main.exe` が生成されます。このファイルを単体で他の場所に移動して実行することも可能です。
-
 ## 使用方法
 
-1. **起動**: `start_app.bat` をダブルクリック、または `dist/main.exe` を実行
+1. **起動**: `start_app.bat` をダブルクリック
 2. **音声認識**: マイクに向かって話す
 3. **AI応答**: 複数のキャラクターが順次応答
 4. **ログ確認**: コマンドプロンプトでリアルタイムログを確認
@@ -82,7 +55,7 @@ python main.py
 
 ### AI応答が来ない場合
 - コマンドプロンプトのログを確認
-- `.env` ファイルまたは環境変数で `GOOGLE_API_KEY` が正しく設定されているか確認
+- `GOOGLE_API_KEY` が正しく設定されているか確認
 - インターネット接続を確認
 
 ### エラーログの確認方法
@@ -98,8 +71,6 @@ python main.py
 - ui.py: tkinter ベースのチャット UI
 - characters.json: キャラクターデータ
 - start_app.bat: ログ表示付き起動用バッチファイル
-- build.bat: EXEビルド用バッチファイル
-- .env.example: APIキー設定用のテンプレートファイル
 
 ## 注意事項
 - `characters.json` は別途提供ファイルを `python-app/` 直下に配置してください。

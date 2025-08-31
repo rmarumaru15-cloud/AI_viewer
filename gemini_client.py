@@ -1,17 +1,20 @@
 import os
 from typing import Dict, Any, List, Tuple
 
+from dotenv import load_dotenv
+
 import google.generativeai as genai
 
 
 class GeminiClient:
 	"""Gemini API を用いてキャラクター応答を生成するクライアント。"""
 
-	def __init__(self, api_key: str | None = None, model_name: str = "gemini-1.5-flash-latest") -> None:
+	def __init__(self, api_key: str | None = None, model_name: str = "gemini-2.5-flash-preview-05-20") -> None:
+		# .env を読み込んでから環境変数参照
+		load_dotenv(override=False)
 		api_key = api_key or os.environ.get("GOOGLE_API_KEY")
 		if not api_key:
 			raise RuntimeError("GOOGLE_API_KEY が設定されていません。")
-		genai.configure(api_key=api_key)
 		self.model = genai.GenerativeModel(model_name)
 
 	def build_prompt(self, user_text: str, character: Dict[str, Any]) -> str:
@@ -59,4 +62,5 @@ class GeminiClient:
 			text = resp.text or ""
 		except Exception as e:
 			text = f"(エラー: {e.__class__.__name__})"
+		return text.strip()
 		return text.strip()
