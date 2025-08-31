@@ -14,10 +14,6 @@ from gemini_client import GeminiClient
 from speech_recognition_module import SpeechToText
 from ui import ChatUI
 
-# .envファイルから環境変数を読み込む（ファイルが存在する場合）
-# .exe化した場合、.exeと同じ階層の.envを読み込む
-load_dotenv(override=False)
-
 
 def log(message: str) -> None:
 	"""コンソールにログを出力する（コンソールがない場合は何もしない）。"""
@@ -202,6 +198,15 @@ class AppController:
 
 def main() -> None:
 	"""エントリーポイント。"""
+	# .envファイルを明示的なパスで読み込む
+	base_dir = _get_base_dir()
+	dotenv_path = os.path.join(base_dir, '.env')
+	if os.path.exists(dotenv_path):
+		load_dotenv(dotenv_path=dotenv_path, override=False)
+		log(f"Loaded .env file from: {dotenv_path}")
+	else:
+		log(f".env file not found at: {dotenv_path}")
+
 	controller = AppController()
 	try:
 		controller.ui.mainloop()
